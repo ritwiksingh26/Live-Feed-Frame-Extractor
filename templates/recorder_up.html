@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+* {
+  box-sizing: border-box;
+}
+
+.row {
+  display: flex;
+}
+
+/* Create two equal columns that sits next to each other */
+.column {
+  flex: 50%;
+  padding: 10px;
+  height: 300px; /* Should be removed. Only for demonstration */
+}
+</style>
+<title>Record Yourself</title>
+<link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='styles/recorder.css') }}">
+        <link rel="shortcut icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.png') }}">
+        <script src="https://cdn.webrtc-experiment.com/RecordRTC.js"></script>
+        <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+        <script src="jquery-3.2.1.min.js"></script>
+</head>
+<body>
+ <h2>Record yourself</h2>
+</center>
+
+<div class="row">
+  <div class="column" >
+    <video  id="video" controls = "" width= "350" height= "280" autoplay style="background-color: grey"></video>
+    <script type="text/javascript">
+                
+            var seconds=0;
+            function displaysecond(){
+                seconds +=1;
+                document.getElementById("displaysecond").innerText="+seconds+";
+            }
+            setInterval(displaysecond,1000);
+
+            
+
+            </script>
+            <script>
+            var width = 320;
+            var height = 240;
+            var canvas = document.createElement('canvas');
+            var video = document.getElementById('video');
+            var context = canvas.getContext('2d');
+            var image = document.getElementById('image');
+            console.log("before get camera");
+            console.log(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+            // Get access to the camera!
+            if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                // Not adding `{ audio: true }` since we only want video now
+                navigator.mediaDevices.getUserMedia({ video: true }).then(function(stream) {
+                    //video.src = window.URL.createObjectURL(stream);
+                    video.srcObject = stream;
+                    video.play();
+                    //console.log('setInterval')
+                    window.setInterval(function() {
+                        context.drawImage(video, 0, 0, width, height); // better use size because camera may gives data in different size then <video> is displaying
+                        canvas.toBlob(upload, "image/jpeg", 350, 280);
+                    }, 100);
+                    setTimeout(function(){
+    				 	console.log("hello");
+    				}, 3000);
+
+                });
+            }
+            function stop () {
+                window.location="/verifying";
+            }
+            
+            function upload(file) {
+                // create form and add file
+                var milliSeconds = 2 * 1000;
+                var formdata = new FormData();
+                formdata.append("snap", file);
+                // create AJAX connection
+                fetch("{{ url_for('upload_file') }}", {
+                    method: 'POST',
+                    body: formdata,
+                    //headers: {"Content-type": "application/x-www-form-urlencoded; charset=UTF-8"}  // makes only problem
+                }).then(function(response) {
+                    return response.blob();
+                }).then(function(blob) {
+                    //console.log(blob);  // it slow down video from server
+                    image.src = URL.createObjectURL(blob);
+                }).catch(function(err) {
+                    setTimeout(function(){
+    				 	console.log("hello");
+    				}, 3000);
+                    console.log('Fetch problem: ' + err.message);
+                },milliSeconds);
+            }
+            </script>
+            <button class="button" onclick="stop();" style="color:#444941">STOP</button>
+  </div>
+  <div class="column" style="background-color:white;">
+    <h3>Note:</h3>
+    <p>*Please be infront of camera.</p>
+    <p>*Please ensure your face is within box and there is adequate light on your face.</p>
+    <p>*Try to catch your video in given rectangle canvas.</p>
+  </div>
+</div>
+
+</body>
+</html>
